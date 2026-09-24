@@ -1,0 +1,426 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-speedometer2"></i> Dashboard Monitoring</h4>
+
+<!-- Kartu Ringkasan -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card stat-purple">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div><small>Total Kontrak</small><h2>{{ ringkasan.total }}</h2></div>
+        <i class="bi bi-folder fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-green">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div><small>Aktif</small><h2>{{ ringkasan.aktif }}</h2></div>
+        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-yellow">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div><small>Akan Berakhir</small><h2>{{ ringkasan.akan }}</h2></div>
+        <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-red">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div><small>Berakhir</small><h2>{{ ringkasan.berakhir }}</h2></div>
+        <i class="bi bi-x-circle fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Baris 1 -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-pie-chart"></i> Status Kontrak</h6>
+      <div class="chart-wrapper"><canvas id="chartStatus"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-bar-chart"></i> Top 10 Vendor</h6>
+      <div class="chart-wrapper"><canvas id="chartVendor"></canvas></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-graph-up"></i> Tren Bulanan</h6>
+      <div class="chart-wrapper"><canvas id="chartTren"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Baris 2 -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-speedometer"></i> Rata-rata Progres Fisik</h6>
+      <div id="chartGaugeFisik" style="min-height:180px;"></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-cash-coin"></i> Rata-rata Progres Bayar</h6>
+      <div id="chartGaugeBayar" style="min-height:180px;"></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-grid-3x3"></i> Heatmap Kontrak/Bulan</h6>
+      <div id="chartHeatmap" style="min-height:180px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline Kontrak -->
+<div class="card p-3 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <h6 class="mb-0">
+      <i class="bi bi-calendar-range"></i> Timeline Kontrak
+      <span class="badge bg-light text-dark ms-2" id="timelineCount">0</span>
+    </h6>
+    <button class="btn btn-sm btn-outline-primary" id="timelineRefresh">
+      <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+  </div>
+  <div id="timelineWrapper" style="min-height:400px;">
+    <div id="timelineLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-2 text-muted small">Memuat timeline...</div>
+    </div>
+    <div id="timelineEmpty" class="text-center text-muted py-5 d-none">
+      <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+      Belum ada kontrak dengan tanggal lengkap
+    </div>
+  </div>
+</div>
+
+<!-- S-Curve + Deviasi -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between mb-2">
+        <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> S-Curve Progres</h6>
+        <select id="scurveSelect" class="form-select form-select-sm" style="width:auto;">
+          <option value="">-- Pilih Kontrak --</option>
+        </select>
+      </div>
+      <div id="chartSCurve" style="min-height:220px;"></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h6><i class="bi bi-bar-chart-line"></i> Deviasi Progres</h6>
+      <div class="chart-wrapper" style="height:250px;">
+        <canvas id="chartDeviasi"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Alerts -->
+<div class="card p-3">
+  <h6><i class="bi bi-bell text-warning"></i> Kontrak Akan Berakhir (≤30 hari)</h6>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead>
+        <tr><th>No Kontrak</th><th>Vendor</th><th>Akhir</th><th>Sisa</th></tr>
+      </thead>
+      <tbody>
+        {% for a in alerts %}
+        <tr>
+          <td><b>{{ a.no_kontrak }}</b></td>
+          <td>{{ a.vendor or '-' }}</td>
+          <td>{{ a.akhir_efektif.strftime('%d/%m/%Y') if a.akhir_efektif else '-' }}</td>
+          <td><span class="badge badge-akan">{{ a.sisa_hari }} hari</span></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-center text-muted py-3">Tidak ada</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js"></script>
+
+<script>
+// GLOBAL
+Chart.defaults.maintainAspectRatio = false;
+Chart.defaults.responsive = true;
+Chart.defaults.animation.duration = 500;
+
+// PIE
+fetch('/api/chart/status').then(r => r.json()).then(d => {
+  new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: { labels: d.labels, datasets: [{ data: d.data, backgroundColor: d.colors, borderWidth: 2, borderColor: '#fff' }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
+  });
+}).catch(e => console.error(e));
+
+// BAR VENDOR
+fetch('/api/chart/vendor').then(r => r.json()).then(d => {
+  new Chart(document.getElementById('chartVendor'), {
+    type: 'bar',
+    data: { labels: d.labels, datasets: [{ label: 'Jumlah', data: d.data, backgroundColor: '#667eea', borderRadius: 6 }] },
+    options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } }
+  });
+}).catch(e => console.error(e));
+
+// LINE TREN
+fetch('/api/chart/tren').then(r => r.json()).then(d => {
+  new Chart(document.getElementById('chartTren'), {
+    type: 'line',
+    data: { labels: d.labels, datasets: [{ label: 'Kontrak', data: d.jml, borderColor: '#764ba2',
+      backgroundColor: 'rgba(118,75,162,0.15)', fill: true, tension: 0.4, pointRadius: 3 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { ticks: { font: { size: 10 } } }, y: { ticks: { font: { size: 10 } } } } }
+  });
+}).catch(e => console.error(e));
+
+// GAUGE
+fetch('/api/chart/gauge').then(r => r.json()).then(d => {
+  new ApexCharts(document.getElementById('chartGaugeFisik'), {
+    series: [d.fisik], chart: { type: 'radialBar', height: 180 },
+    plotOptions: { radialBar: { hollow: { size: '60%' },
+      dataLabels: { name: { fontSize: '12px' }, value: { fontSize: '22px', fontWeight: 'bold' } } } },
+    labels: ['Fisik'], colors: ['#38ef7d']
+  }).render();
+
+  new ApexCharts(document.getElementById('chartGaugeBayar'), {
+    series: [d.bayar], chart: { type: 'radialBar', height: 180 },
+    plotOptions: { radialBar: { hollow: { size: '60%' },
+      dataLabels: { name: { fontSize: '12px' }, value: { fontSize: '22px', fontWeight: 'bold' } } } },
+    labels: ['Bayar'], colors: ['#667eea']
+  }).render();
+}).catch(e => console.error(e));
+
+// HEATMAP
+fetch('/api/chart/heatmap').then(r => r.json()).then(matrix => {
+  const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const tahunSet = [...new Set(matrix.map(m => m.tahun))].sort();
+  const series = tahunSet.map(t => ({
+    name: String(t),
+    data: bulan.map((b, i) => {
+      const found = matrix.find(m => m.tahun === t && m.bulan === i);
+      return { x: b, y: found ? found.jml : 0 };
+    })
+  }));
+  if (!series.length) { document.getElementById('chartHeatmap').innerHTML = '<div class="text-muted text-center pt-5">Belum ada data</div>'; return; }
+  new ApexCharts(document.getElementById('chartHeatmap'), {
+    series: series, chart: { type: 'heatmap', height: 180 },
+    plotOptions: { heatmap: { shadeIntensity: 0.5, colorScale: { ranges: [
+      { from: 0, to: 0, color: '#f0f0f0' }, { from: 1, to: 3, color: '#b3d9ff' },
+      { from: 4, to: 6, color: '#66b3ff' }, { from: 7, to: 10, color: '#3385ff' },
+      { from: 11, to: 999, color: '#0052cc' } ] } } },
+    dataLabels: { enabled: false },
+    xaxis: { type: 'category', labels: { style: { fontSize: '9px' } } }
+  }).render();
+}).catch(e => console.error(e));
+
+// ============================================================
+// TIMELINE KONTRAK — ApexCharts
+// ============================================================
+let timelineChart = null;
+
+function loadTimeline() {
+  const wrapper = document.getElementById('timelineWrapper');
+  const loading = document.getElementById('timelineLoading');
+  const empty = document.getElementById('timelineEmpty');
+  const counter = document.getElementById('timelineCount');
+
+  loading.classList.remove('d-none');
+  empty.classList.add('d-none');
+
+  // Hapus chart lama
+  const old = document.getElementById('apexTimeline');
+  if (old) old.remove();
+
+  fetch('/api/chart/gantt')
+    .then(r => r.json())
+    .then(data => {
+      loading.classList.add('d-none');
+
+      if (!data || !data.length) {
+        empty.classList.remove('d-none');
+        counter.textContent = '0';
+        return;
+      }
+
+      const sanitized = data
+        .filter(t => t && t.id && t.start && t.end)
+        .map(t => {
+          const startStr = String(t.start).slice(0, 10);
+          const endStr = String(t.end).slice(0, 10);
+          const startTime = new Date(startStr + 'T00:00:00').getTime();
+          const endTime = new Date(endStr + 'T00:00:00').getTime();
+          if (isNaN(startTime) || isNaN(endTime)) return null;
+
+          let progress = parseInt(t.progress, 10);
+          if (isNaN(progress)) progress = 0;
+          progress = Math.max(0, Math.min(100, progress));
+
+          let fillColor = '#667eea';
+          if (t.custom_class === 'bar-done') fillColor = '#38ef7d';
+          else if (t.custom_class === 'bar-pending') fillColor = '#f2c94c';
+          else if (t.custom_class === 'bar-cancelled') fillColor = '#f45c43';
+
+          return {
+            id: String(t.id),
+            kontrak_id: t.kontrak_id || null,
+            no_kontrak: String(t.no_kontrak_asli || t.id || ''),
+            name: String(t.name || ''),
+            startTime: startTime,
+            endTime: endTime,
+            progress: progress,
+            fillColor: fillColor,
+          };
+        })
+        .filter(t => t !== null);
+
+      if (!sanitized.length) {
+        empty.classList.remove('d-none');
+        counter.textContent = '0';
+        return;
+      }
+
+      counter.textContent = sanitized.length;
+
+      const series = sanitized.map(t => ({
+        x: t.no_kontrak,
+        y: [t.startTime, t.endTime],
+        fillColor: t.fillColor,
+        meta: t,
+      }));
+
+      // Buat div untuk apex
+      const chartDiv = document.createElement('div');
+      chartDiv.id = 'apexTimeline';
+      wrapper.appendChild(chartDiv);
+
+      const h = Math.max(400, sanitized.length * 28 + 100);
+
+      timelineChart = new ApexCharts(chartDiv, {
+        series: [{ data: series }],
+        chart: {
+          type: 'rangeBar',
+          height: h,
+          toolbar: { show: true, tools: { download: true, zoom: true, zoomin: true, zoomout: true, pan: true, reset: true } },
+          animations: { enabled: false },
+          zoom: { enabled: true },
+        },
+        plotOptions: {
+          bar: { horizontal: true, barHeight: '70%', rangeBarGroupRows: true, borderRadius: 4 },
+        },
+        xaxis: { type: 'datetime', labels: { style: { fontSize: '11px' }, format: 'dd MMM yyyy' } },
+        yaxis: { labels: { style: { fontSize: '10px' }, minWidth: 250, maxWidth: 400 } },
+        tooltip: {
+          custom: function (opts) {
+            const t = series[opts.dataPointIndex].meta;
+            const durasi = Math.round((t.endTime - t.startTime) / (1000 * 60 * 60 * 24));
+            const startFmt = new Date(t.startTime).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            const endFmt = new Date(t.endTime).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+            return `<div style="padding:12px;font-size:12px;max-width:340px;">
+              <div style="font-weight:bold;color:#667eea;margin-bottom:6px;">${t.no_kontrak}</div>
+              <div style="margin:3px 0;"><b>Mulai:</b> ${startFmt}</div>
+              <div style="margin:3px 0;"><b>Selesai:</b> ${endFmt}</div>
+              <div style="margin:3px 0;"><b>Durasi:</b> ${durasi} hari</div>
+              <div style="margin:3px 0;"><b>Progress:</b> ${t.progress}%</div>
+            </div>`;
+          },
+        },
+        grid: { borderColor: '#e9ecef' },
+        legend: { show: false },
+      });
+
+      timelineChart.render();
+
+      // Klik handler
+      chartDiv.addEventListener('click', function (e) {
+        const bar = e.target.closest('.apexcharts-rangebar-area');
+        if (!bar) return;
+        const idx = parseInt(bar.getAttribute('j') || '-1', 10);
+        if (idx >= 0 && series[idx] && series[idx].meta.kontrak_id) {
+          window.location.href = '/kontrak/detail/' + series[idx].meta.kontrak_id;
+        }
+      });
+
+    })
+    .catch(err => {
+      loading.classList.add('d-none');
+      console.error('Timeline fetch error:', err);
+      wrapper.innerHTML = `<div class="alert alert-danger m-3">Gagal memuat: ${err.message}</div>`;
+    });
+}
+
+loadTimeline();
+document.getElementById('timelineRefresh')?.addEventListener('click', loadTimeline);
+
+// S-CURVE
+fetch('/api/chart/kontrak-list').then(r => r.json()).then(list => {
+  const sel = document.getElementById('scurveSelect');
+  list.forEach(k => {
+    const o = document.createElement('option');
+    o.value = k.id;
+    o.textContent = k.no_kontrak;
+    sel.appendChild(o);
+  });
+}).catch(e => console.error(e));
+
+let sCurveChart = null;
+document.getElementById('scurveSelect')?.addEventListener('change', function () {
+  const id = this.value;
+  if (!id) return;
+  fetch('/api/chart/scurve/' + id).then(r => r.json()).then(d => {
+    if (d.error) return;
+    if (sCurveChart) sCurveChart.destroy();
+    sCurveChart = new ApexCharts(document.getElementById('chartSCurve'), {
+      series: [{ name: 'Rencana', data: d.rencana }, { name: 'Realisasi', data: d.realisasi }],
+      chart: { type: 'area', height: 220, toolbar: { show: false } },
+      colors: ['#667eea', '#38ef7d'],
+      dataLabels: { enabled: false },
+      stroke: { curve: 'smooth', width: 2 },
+      fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
+      xaxis: { categories: d.labels, labels: { style: { fontSize: '10px' } } },
+      yaxis: { max: 100, min: 0 },
+      legend: { position: 'top' },
+    });
+    sCurveChart.render();
+  });
+});
+
+// DEVIASI
+fetch('/api/chart/deviasi').then(r => r.json()).then(d => {
+  new Chart(document.getElementById('chartDeviasi'), {
+    type: 'bar',
+    data: { labels: d.labels, datasets: [
+      { label: 'Fisik %', data: d.fisik, backgroundColor: '#38ef7d', borderRadius: 4 },
+      { label: 'Bayar %', data: d.bayar, backgroundColor: '#667eea', borderRadius: 4 }
+    ] },
+    options: { responsive: true, maintainAspectRatio: false,
+      scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45 } }, y: { ticks: { font: { size: 10 } } } },
+      plugins: { legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } } } }
+  });
+}).catch(e => console.error(e));
+</script>
+{% endblock %}

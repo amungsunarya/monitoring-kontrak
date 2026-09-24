@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: monitoring-web
+    restart: unless-stopped
+    ports:
+      - "8001:5000"
+    env_file: .env
+    volumes:
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+      - ./credentials.json:/app/credentials.json:ro
+
+  scheduler:
+    build: .
+    container_name: monitoring-scheduler
+    restart: unless-stopped
+    env_file: .env
+    command: python -m scheduler.runner
+    volumes:
+      - ./instance:/app/instance
+      - ./logs:/app/logs
+      - ./credentials.json:/app/credentials.json:ro

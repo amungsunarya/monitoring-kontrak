@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Kelola User{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+	<h4><i class="bi bi-people"></i> Kelola User</h4>
+	<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUser"><i class="bi bi-person-plus"></i> Tambah User</button>
+</div>
+<div class="card p-3"><div class="table-responsive">
+	<table class="table table-hover align-middle">
+		<thead class="table-dark"><tr><th>Username</th><th>Nama</th><th>Role</th><th>Status</th><th>Aksi</th></tr></thead>
+		<tbody>
+			{% for u in data %}
+			<tr><td>{{ u.username }}</td><td>{{ u.nama }}</td><td>{{ u.role }}</td><td>{{ 'Aktif' if u.aktif else 'Nonaktif' }}</td>
+				<td class="text-nowrap"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editUser{{ u.id }}">Edit</button>
+					  {% if u.id != session.get('user_id') %}<form method="POST" action="{{ url_for('user.delete', id=u.id) }}" class="d-inline" onsubmit="return confirm('Hapus user ini?')"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-outline-danger">Hapus</button></form>{% endif %}
+				</td>
+			</tr>
+			<div class="modal fade" id="editUser{{ u.id }}"><div class="modal-dialog"><div class="modal-content"><form method="POST" action="{{ url_for('user.edit', id=u.id) }}">
+				<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+				<div class="modal-header"><h5>Edit User</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+				<div class="modal-body"><input name="username" class="form-control mb-2" value="{{ u.username }}" required><input name="nama" class="form-control mb-2" value="{{ u.nama }}" required><input name="password" type="password" class="form-control mb-2" placeholder="Password baru (opsional)"><select name="role" class="form-select mb-2"><option value="admin" {{ 'selected' if u.role == 'admin' }}>Admin</option><option value="user" {{ 'selected' if u.role == 'user' }}>User</option><option value="viewer" {{ 'selected' if u.role == 'viewer' }}>Viewer</option></select><label><input name="aktif" type="checkbox" {{ 'checked' if u.aktif }}> Aktif</label></div>
+				<div class="modal-footer"><button class="btn btn-primary">Simpan</button></div>
+			</form></div></div></div>
+			{% endfor %}
+		</tbody>
+	</table>
+</div></div>
+<div class="modal fade" id="addUser"><div class="modal-dialog"><div class="modal-content"><form method="POST" action="{{ url_for('user.add') }}">
+	<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+	<div class="modal-header"><h5>Tambah User Baru</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+	<div class="modal-body"><input name="username" class="form-control mb-2" placeholder="Username" required><input name="nama" class="form-control mb-2" placeholder="Nama" required><input name="password" type="password" class="form-control mb-2" placeholder="Password" required><select name="role" class="form-select"><option value="user">User</option><option value="admin">Admin</option><option value="viewer">Viewer</option></select></div>
+	<div class="modal-footer"><button class="btn btn-primary">Simpan</button></div>
+</form></div></div></div>
+{% endblock %}

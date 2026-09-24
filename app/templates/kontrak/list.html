@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Daftar Kontrak{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <h4><i class="bi bi-folder"></i> Daftar Kontrak</h4>
+  <div>
+    <a href="{{ url_for('export.import_page') }}" class="btn btn-info">
+      <i class="bi bi-upload"></i> Import Excel
+    </a>
+    <a href="{{ url_for('export.excel') }}" class="btn btn-success">
+      <i class="bi bi-file-earmark-excel"></i> Export Excel
+    </a>
+    <a href="{{ url_for('kontrak.add') }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> Tambah Kontrak
+    </a>
+  </div>
+</div>
+
+<!-- Filter -->
+<div class="card p-3 mb-3">
+  <form class="row g-2" method="GET">
+    <div class="col-md-6">
+      <input name="q" value="{{ q }}" class="form-control"
+             placeholder="🔍 Cari no. kontrak / uraian / vendor...">
+    </div>
+    <div class="col-md-3">
+      <select name="status" class="form-select">
+        <option value="">Semua Status</option>
+        <option value="aktif" {{ 'selected' if status_filter=='aktif' }}>Aktif</option>
+        <option value="akan" {{ 'selected' if status_filter=='akan' }}>Akan Berakhir</option>
+        <option value="berakhir" {{ 'selected' if status_filter=='berakhir' }}>Berakhir</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <button class="btn btn-primary w-100"><i class="bi bi-search"></i> Filter</button>
+    </div>
+  </form>
+</div>
+
+<!-- Tabel -->
+<div class="card p-3">
+  <div class="table-responsive" style="max-height: 70vh;">
+    <table class="table table-hover table-sm align-middle kontrak-table">
+      <thead class="table-dark sticky-top">
+        <tr>
+          <th style="width:40px;">No</th>
+          <th>NO. KONTRAK</th>
+          <th>URAIAN PEKERJAAN</th>
+          <th>Jenis</th>
+          <th>Link</th>
+          <th>VENDOR</th>
+          <th>Status Pekerjaan</th>
+          <th>Awal</th>
+          <th>Akhir</th>
+          <th>Bayar</th>
+          <th>Fisik</th>
+          <th>Termin</th>
+          <th>Update LKP</th>
+          <th>Catatan</th>
+          <th>Akhir JamPel</th>
+          <th>Akhir JamHar</th>
+          <th>Masa Pemeliharaan</th>
+          <th>Akhir Amandemen</th>
+          <th>STATUS</th>
+          <th style="width:110px;">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in data %}
+        <tr>
+          <td>{{ loop.index }}</td>
+          <td>
+            <a href="{{ url_for('kontrak.detail', id=d.id) }}"
+               class="fw-bold text-decoration-none">
+              {{ d.no_kontrak }}
+            </a>
+          </td>
+          <td title="{{ d.uraian_pekerjaan }}">
+            {{ (d.uraian_pekerjaan or '-')[:60] }}{% if d.uraian_pekerjaan and d.uraian_pekerjaan|length > 60 %}...{% endif %}
+          </td>
+          <td>{{ d.jenis or '-' }}</td>
+          <td>
+            {% if d.link_dokumen %}
+              <a href="{{ d.link_dokumen }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Buka dokumen">
+                <i class="bi bi-link-45deg"></i>
+              </a>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td>{{ d.vendor or '-' }}</td>
+          <td>
+            {% set sp = d.status_pekerjaan or '-' %}
+            {% if sp == 'Selesai' %}
+              <span class="badge bg-success">{{ sp }}</span>
+            {% elif sp == 'Berjalan' %}
+              <span class="badge bg-primary">{{ sp }}</span>
+            {% elif sp == 'Ditunda' %}
+              <span class="badge bg-warning text-dark">{{ sp }}</span>
+            {% elif sp == 'Batal' %}
+              <span class="badge bg-danger">{{ sp }}</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ sp }}</span>
+            {% endif %}
+          </td>
+          <td>{{ d.awal_kontrak.strftime('%d/%m/%y') if d.awal_kontrak else '-' }}</td>
+          <td>{{ d.akhir_kontrak.strftime('%d/%m/%y') if d.akhir_kontrak else '-' }}</td>
+          <td>
+            <div class="progress" style="height:16px;min-width:50px;">
+              <div class="progress-bar bg-info" style="width:{{ d.progres_bayar or 0 }}%">
+                {{ d.progres_bayar or 0 }}%
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="progress" style="height:16px;min-width:50px;">
+              <div class="progress-bar bg-success" style="width:{{ d.progres_fisik or 0 }}%">
+                {{ d.progres_fisik or 0 }}%
+              </div>
+            </div>
+          </td>
+          <td>{{ d.termin or '-' }}</td>
+          <td>{{ d.update_lkp.strftime('%d/%m/%y') if d.update_lkp else '-' }}</td>
+          <td title="{{ d.catatan }}">
+            {{ (d.catatan or '-')[:30] }}{% if d.catatan and d.catatan|length > 30 %}...{% endif %}
+          </td>
+          <td>{{ d.akhir_jampel.strftime('%d/%m/%y') if d.akhir_jampel else '-' }}</td>
+          <td>{{ d.akhir_jamhar.strftime('%d/%m/%y') if d.akhir_jamhar else '-' }}</td>
+          <td>{{ d.masa_pemeliharaan or '-' }}</td>
+          <td>{{ d.akhir_amandemen.strftime('%d/%m/%y') if d.akhir_amandemen else '-' }}</td>
+          <td>
+            <span class="badge {{ d.status_masa_kontrak_badge }}"
+                  title="{{ d.status_masa_kontrak_label }}">
+              {{ d.status_masa_kontrak_label }}
+            </span>
+          </td>
+          <td>
+            <div class="btn-group btn-group-sm">
+              <a href="{{ url_for('kontrak.detail', id=d.id) }}"
+                 class="btn btn-info" title="Detail">
+                <i class="bi bi-eye"></i>
+              </a>
+              <a href="{{ url_for('kontrak.edit', id=d.id) }}"
+                 class="btn btn-warning" title="Edit">
+                <i class="bi bi-pencil"></i>
+              </a>
+              {% if session.role == 'admin' %}
+              <a href="{{ url_for('kontrak.delete', id=d.id) }}"
+                 onclick="return confirm('Yakin hapus kontrak {{ d.no_kontrak }}?')"
+                 class="btn btn-danger" title="Hapus">
+                <i class="bi bi-trash"></i>
+              </a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="20" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            Belum ada data kontrak
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="mt-2 text-muted small">
+    Total: <b>{{ data|length }}</b> kontrak
+  </div>
+</div>
+
+<style>
+.kontrak-table {
+  font-size: 12px;
+}
+.kontrak-table th {
+  font-size: 11px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.kontrak-table td {
+  white-space: nowrap;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+.kontrak-table .sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #212529;
+}
+.kontrak-table .progress {
+  border-radius: 4px;
+}
+</style>
+{% endblock %}

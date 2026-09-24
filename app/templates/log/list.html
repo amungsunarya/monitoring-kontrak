@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Log Aktivitas{% endblock %}
+
+{% block content %}
+<h4><i class="bi bi-clock-history"></i> Log Aktivitas</h4>
+
+<div class="card p-3 mt-3">
+  <div class="table-responsive">
+    <table class="table table-sm table-hover">
+      <thead class="table-dark">
+        <tr>
+          <th>Waktu</th>
+          <th>User</th>
+          <th>Aksi</th>
+          <th>Keterangan</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for l in data %}
+        <tr>
+          <td>{{ l.created_at.strftime('%d/%m/%Y %H:%M') }}</td>
+          <td>{{ l.nama or '-' }}</td>
+          <td><span class="badge bg-secondary">{{ l.aksi }}</span></td>
+          <td>{{ l.keterangan }}</td>
+          <td>{{ l.ip or '-' }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" class="text-center text-muted py-3">
+            Belum ada log aktivitas
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

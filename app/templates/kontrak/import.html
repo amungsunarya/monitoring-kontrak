@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Import Kontrak dari Excel{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8">
+
+    <div class="d-flex align-items-center mb-3">
+      <a href="{{ url_for('kontrak.list') }}" class="btn btn-sm btn-outline-secondary me-2">
+        <i class="bi bi-arrow-left"></i> Kembali
+      </a>
+      <h4 class="mb-0"><i class="bi bi-upload"></i> Import Kontrak dari Excel</h4>
+    </div>
+
+    <div class="card p-4">
+
+      <!-- Info -->
+      <div class="alert alert-info">
+        <h6 class="mb-2"><i class="bi bi-info-circle"></i> Cara Import:</h6>
+        <ol class="mb-0 ps-3">
+          <li>Download template di bawah (opsional)</li>
+          <li>Isi data kontrak di file Excel</li>
+          <li>Upload file yang sudah diisi</li>
+          <li>Pilih mode import</li>
+          <li>Klik <b>Import</b></li>
+        </ol>
+      </div>
+
+      <!-- Download Template -->
+      <div class="mb-4">
+        <a href="{{ url_for('export.template_excel') }}" class="btn btn-outline-success">
+          <i class="bi bi-download"></i> Download Template Excel
+        </a>
+      </div>
+
+      <!-- Form Upload -->
+      <form method="POST" action="{{ url_for('export.import_excel') }}"
+            enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">File Excel (.xlsx)</label>
+          <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
+          <small class="text-muted">Format: .xlsx atau .xls, max 16 MB</small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label fw-bold">Mode Import</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="mode" id="modeSkip" value="skip" checked>
+            <label class="form-check-label" for="modeSkip">
+              <b>Skip</b> — Lewati no kontrak yang sudah ada (paling aman)
+            </label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="mode" id="modeReplace" value="replace">
+            <label class="form-check-label" for="modeReplace">
+              <b>Replace</b> — Timpa data lama kalau no kontrak sama
+            </label>
+          </div>
+        </div>
+
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          <b>Perhatian:</b> Pastikan file Excel punya header di baris 1 dengan nama kolom:
+          <code>NO. KONTRAK</code>, <code>URAIAN PEKERJAAN</code>, <code>VENDOR</code>,
+          <code>AWAL KONTRAK</code>, <code>AKHIR KONTRAK</code>, dll.
+        </div>
+
+        <div class="text-end">
+          <a href="{{ url_for('kontrak.list') }}" class="btn btn-secondary">Batal</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-upload"></i> Import Sekarang
+          </button>
+        </div>
+      </form>
+
+    </div>
+
+    <!-- Panduan Kolom -->
+    <div class="card p-4 mt-3">
+      <h6><i class="bi bi-list-check"></i> Kolom yang Dikenali</h6>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead>
+            <tr><th>Nama Kolom di Excel</th><th>Wajib</th><th>Format</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>NO. KONTRAK</code></td><td>✅ Ya</td><td>Teks unik</td></tr>
+            <tr><td><code>URAIAN PEKERJAAN</code></td><td>-</td><td>Teks</td></tr>
+            <tr><td><code>Jenis</code></td><td>-</td><td>Jasa/Barang/…</td></tr>
+            <tr><td><code>Link Dokumen</code></td><td>-</td><td>URL</td></tr>
+            <tr><td><code>VENDOR</code></td><td>-</td><td>Teks</td></tr>
+            <tr><td><code>Status Pekerjaan</code></td><td>-</td><td>Berjalan/Selesai/…</td></tr>
+            <tr><td><code>Awal Kontrak</code></td><td>✅ Ya</td><td>dd/mm/yyyy atau yyyy-mm-dd</td></tr>
+            <tr><td><code>Akhir Kontrak</code></td><td>✅ Ya</td><td>dd/mm/yyyy atau yyyy-mm-dd</td></tr>
+            <tr><td><code>Progres Bayar (%)</code></td><td>-</td><td>Angka 0-100</td></tr>
+            <tr><td><code>Progres Fisik (%)</code></td><td>-</td><td>Angka 0-100</td></tr>
+            <tr><td><code>Termin</code></td><td>-</td><td>Teks</td></tr>
+            <tr><td><code>Update LKP</code></td><td>-</td><td>Tanggal</td></tr>
+            <tr><td><code>Catatan</code></td><td>-</td><td>Teks</td></tr>
+            <tr><td><code>Akhir JamPel</code></td><td>-</td><td>Tanggal</td></tr>
+            <tr><td><code>Akhir JamHar</code></td><td>-</td><td>Tanggal</td></tr>
+            <tr><td><code>Masa Pemeliharaan</code></td><td>-</td><td>Teks</td></tr>
+            <tr><td><code>Akhir Amandemen</code></td><td>-</td><td>Tanggal</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

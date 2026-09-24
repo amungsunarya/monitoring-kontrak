@@ -1,0 +1,55 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-gradient-primary">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand fw-bold" href="{{ url_for('dashboard.index') }}">
+      <i class="bi bi-file-earmark-text"></i> {{ config.APP_NAME }}
+    </a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint and 'dashboard' in request.endpoint }}"
+             href="{{ url_for('dashboard.index') }}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint and 'kontrak' in request.endpoint }}"
+             href="{{ url_for('kontrak.list') }}">
+            <i class="bi bi-folder"></i> Kontrak
+          </a>
+        </li>
+        {% if session.role == 'admin' %}
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint and 'user' in request.endpoint }}"
+             href="{{ url_for('user.list') }}">
+            <i class="bi bi-people"></i> User
+          </a>
+        </li>
+        {% endif %}
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint and 'log' in request.endpoint }}"
+             href="{{ url_for('log.list') }}">
+            <i class="bi bi-clock-history"></i> Log
+          </a>
+        </li>
+      </ul>
+      <ul class="navbar-nav">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#">
+            <i class="bi bi-person-circle"></i> {{ session.nama }}
+            <span class="badge bg-light text-dark ms-1">{{ session.role }}</span>
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li>
+              <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+              </a>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>

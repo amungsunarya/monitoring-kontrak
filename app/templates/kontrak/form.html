@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if k else 'Tambah' }} Kontrak{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+  <h4>
+    <i class="bi bi-{{ 'pencil' if k else 'plus-circle' }}"></i>
+    {{ 'Edit' if k else 'Tambah' }} Kontrak
+  </h4>
+
+  <form method="POST" class="mt-3">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row g-3">
+
+      <div class="col-md-6">
+        <label class="form-label">NO. KONTRAK *</label>
+        <input name="no_kontrak" class="form-control"
+               value="{{ k.no_kontrak if k else '' }}" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">VENDOR</label>
+        <input name="vendor" class="form-control"
+               value="{{ k.vendor if k else '' }}" placeholder="PT Maju Jaya">
+      </div>
+
+      <div class="col-md-12">
+        <label class="form-label">URAIAN PEKERJAAN</label>
+        <textarea name="uraian" class="form-control" rows="2">{{ k.uraian_pekerjaan if k else '' }}</textarea>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Jenis</label>
+        <select name="jenis" class="form-select">
+          {% set jenis_list = ['Jasa', 'Barang', 'Konstruksi', 'Konsultasi', 'Maintenance', 'Lainnya'] %}
+          {% for j in jenis_list %}
+          <option value="{{ j }}" {{ 'selected' if k and k.jenis == j }}>{{ j }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Link Dokumen</label>
+        <input name="link" class="form-control"
+               value="{{ k.link_dokumen if k else '' }}"
+               placeholder="https://drive.google.com/...">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Status Pekerjaan</label>
+        <select name="status_pekerjaan" class="form-select">
+          {% set sp_list = ['Belum Mulai', 'Berjalan', 'Selesai', 'Ditunda', 'Batal'] %}
+          {% for sp in sp_list %}
+          <option value="{{ sp }}" {{ 'selected' if k and k.status_pekerjaan == sp }}>{{ sp }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Awal Kontrak *</label>
+        <input name="awal" type="date" class="form-control"
+               value="{{ k.awal_kontrak if k else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Akhir Kontrak *</label>
+        <input name="akhir" type="date" class="form-control"
+               value="{{ k.akhir_kontrak if k else '' }}" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Akhir Amandemen</label>
+        <input name="amandemen" type="date" class="form-control"
+               value="{{ k.akhir_amandemen if k else '' }}">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Progres Bayar (%)</label>
+        <input name="bayar" type="number" min="0" max="100" class="form-control"
+               value="{{ k.progres_bayar if k else 0 }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Progres Fisik (%)</label>
+        <input name="fisik" type="number" min="0" max="100" class="form-control"
+               value="{{ k.progres_fisik if k else 0 }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Termin</label>
+        <input name="termin" class="form-control"
+               value="{{ k.termin if k else '' }}" placeholder="Termin 1">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Update LKP</label>
+        <input name="update_lkp" type="date" class="form-control"
+               value="{{ k.update_lkp if k else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Akhir JamPel</label>
+        <input name="jampel" type="date" class="form-control"
+               value="{{ k.akhir_jampel if k else '' }}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Akhir JamHar</label>
+        <input name="jamhar" type="date" class="form-control"
+               value="{{ k.akhir_jamhar if k else '' }}">
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Masa Pemeliharaan</label>
+        <input name="pemeliharaan" class="form-control"
+               value="{{ k.masa_pemeliharaan if k else '' }}"
+               placeholder="90 hari / 1 tahun">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">Catatan</label>
+        <input name="catatan" class="form-control"
+               value="{{ k.catatan if k else '' }}"
+               placeholder="Catatan tambahan...">
+      </div>
+
+    </div>
+
+    <div class="mt-4 text-end">
+      <a href="{{ url_for('kontrak.list') }}" class="btn btn-secondary">Batal</a>
+      <button class="btn btn-primary">
+        <i class="bi bi-save"></i> Simpan
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

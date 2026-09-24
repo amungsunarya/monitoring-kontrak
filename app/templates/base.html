@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<title>{% block title %}{{ config.APP_NAME }}{% endblock %}</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+
+<!-- PWA -->
+<meta name="theme-color" content="#667eea">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<link rel="icon" type="image/png" href="{{ url_for('static', filename='img/icon-192.png') }}">
+</head>
+<body>
+
+{% include 'components/navbar.html' %}
+
+<div class="container-fluid p-4">
+  {% include 'components/flash.html' %}
+  {% block content %}{% endblock %}
+</div>
+
+<!-- Tombol Install PWA -->
+<button id="installBtn" class="btn-install-pwa">Install App</button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/pwa.js') }}"></script>
+<script>
+// Auto-inject CSRF token ke semua form POST
+document.addEventListener('DOMContentLoaded', function() {
+  const token = document.querySelector('meta[name="csrf-token"]')?.content;
+  if (!token) return;
+
+  // Untuk semua form
+  document.querySelectorAll('form[method="POST"], form[method="post"]').forEach(function(form) {
+    if (!form.querySelector('input[name="csrf_token"]')) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = 'csrf_token';
+      input.value = token;
+      form.appendChild(input);
+    }
+  });
+
+  // Untuk AJAX/fetch
+  window.csrfToken = token;
+});
+
+// Helper untuk fetch dengan CSRF
+window.fetchWithCsrf = function(url, options = {}) {
+  options.headers = options.headers || {};
+  if (window.csrfToken) {
+    options.headers['X-CSRFToken'] = window.csrfToken;
+  }
+  return fetch(url, options);
+};
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

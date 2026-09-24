@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Detail Kontrak - {{ k.no_kontrak }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <a href="{{ url_for('kontrak.list') }}" class="btn btn-sm btn-outline-secondary">
+      <i class="bi bi-arrow-left"></i> Kembali
+    </a>
+    <h4 class="d-inline-block ms-2 mb-0">
+      <i class="bi bi-file-earmark-text"></i> Detail Kontrak
+    </h4>
+  </div>
+  <div class="btn-group">
+    <a href="{{ url_for('kontrak.edit', id=k.id) }}" class="btn btn-warning">
+      <i class="bi bi-pencil"></i> Edit
+    </a>
+    {% if session.role == 'admin' %}
+    <a href="{{ url_for('kontrak.delete', id=k.id) }}"
+       onclick="return confirm('Yakin hapus kontrak {{ k.no_kontrak }}?')"
+       class="btn btn-danger">
+      <i class="bi bi-trash"></i> Hapus
+    </a>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Kartu Info Utama -->
+<div class="card p-4 mb-3">
+  <div class="row">
+    <div class="col-md-8">
+      <h3 class="mb-1 text-primary">{{ k.no_kontrak }}</h3>
+      <p class="text-muted mb-3">{{ k.uraian_pekerjaan or '-' }}</p>
+      <div>
+        <span class="badge {{ k.status_masa_kontrak_badge }} fs-6 me-2">
+          {{ k.status_masa_kontrak_label }}
+        </span>
+        {% set sp = k.status_pekerjaan or '-' %}
+        {% if sp == 'Selesai' %}
+          <span class="badge bg-success fs-6">{{ sp }}</span>
+        {% elif sp == 'Berjalan' %}
+          <span class="badge bg-primary fs-6">{{ sp }}</span>
+        {% elif sp == 'Ditunda' %}
+          <span class="badge bg-warning text-dark fs-6">{{ sp }}</span>
+        {% elif sp == 'Batal' %}
+          <span class="badge bg-danger fs-6">{{ sp }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+      {% if k.link_dokumen %}
+      <a href="{{ k.link_dokumen }}" target="_blank" class="btn btn-outline-primary">
+        <i class="bi bi-box-arrow-up-right"></i> Buka Dokumen
+      </a>
+      {% endif %}
+      {% if k.vendor %}
+      <div class="text-muted small mt-2">
+        <i class="bi bi-building"></i> {{ k.vendor }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Progress Bars -->
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between mb-2">
+        <strong><i class="bi bi-cash-coin"></i> Progres Bayar</strong>
+        <span class="fs-4 text-info">{{ k.progres_bayar or 0 }}%</span>
+      </div>
+      <div class="progress" style="height:24px;">
+        <div class="progress-bar bg-info" style="width:{{ k.progres_bayar or 0 }}%"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between mb-2">
+        <strong><i class="bi bi-hammer"></i> Progres Fisik</strong>
+        <span class="fs-4 text-success">{{ k.progres_fisik or 0 }}%</span>
+      </div>
+      <div class="progress" style="height:24px;">
+        <div class="progress-bar bg-success" style="width:{{ k.progres_fisik or 0 }}%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail Table -->
+<div class="card p-4">
+  <h5 class="mb-3"><i class="bi bi-info-circle"></i> Informasi Lengkap</h5>
+  <div class="table-responsive">
+    <table class="table table-borderless detail-table">
+      <tbody>
+        <tr>
+          <th><i class="bi bi-hash"></i> NO. KONTRAK</th>
+          <td>{{ k.no_kontrak or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-file-text"></i> URAIAN PEKERJAAN</th>
+          <td>{{ k.uraian_pekerjaan or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-tag"></i> Jenis</th>
+          <td>{{ k.jenis or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-link-45deg"></i> Link Dokumen</th>
+          <td>
+            {% if k.link_dokumen %}
+              <a href="{{ k.link_dokumen }}" target="_blank">{{ k.link_dokumen }}</a>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-building"></i> VENDOR</th>
+          <td>{{ k.vendor or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-briefcase"></i> Status Pekerjaan</th>
+          <td>
+            {% set sp = k.status_pekerjaan or '-' %}
+            {% if sp == 'Selesai' %}
+              <span class="badge bg-success">{{ sp }}</span>
+            {% elif sp == 'Berjalan' %}
+              <span class="badge bg-primary">{{ sp }}</span>
+            {% elif sp == 'Ditunda' %}
+              <span class="badge bg-warning text-dark">{{ sp }}</span>
+            {% elif sp == 'Batal' %}
+              <span class="badge bg-danger">{{ sp }}</span>
+            {% else %}
+              <span class="badge bg-secondary">{{ sp }}</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-calendar-check"></i> Awal Kontrak</th>
+          <td>{{ k.awal_kontrak.strftime('%d %B %Y') if k.awal_kontrak else '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-calendar-x"></i> Akhir Kontrak</th>
+          <td>{{ k.akhir_kontrak.strftime('%d %B %Y') if k.akhir_kontrak else '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-calendar-plus"></i> Akhir Amandemen</th>
+          <td>
+            {% if k.akhir_amandemen %}
+              {{ k.akhir_amandemen.strftime('%d %B %Y') }}
+              <span class="badge bg-warning text-dark ms-2">Diperpanjang</span>
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-calendar-range"></i> Durasi</th>
+          <td>
+            {% if k.awal_kontrak and k.akhir_efektif %}
+              {% set total = (k.akhir_efektif - k.awal_kontrak).days %}
+              {{ total }} hari
+              {% if k.sisa_hari is not none %}
+                {% if k.sisa_hari >= 0 %}
+                  <span class="text-success">(sisa {{ k.sisa_hari }} hari)</span>
+                {% else %}
+                  <span class="text-danger">(berakhir {{ -k.sisa_hari }} hari lalu)</span>
+                {% endif %}
+              {% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-cash-stack"></i> Progres Bayar</th>
+          <td>{{ k.progres_bayar or 0 }}%</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-hammer"></i> Progres Fisik</th>
+          <td>{{ k.progres_fisik or 0 }}%</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-exclamation-triangle"></i> Deviasi (Fisik − Bayar)</th>
+          <td>
+            {% set dev = k.deviasi %}
+            {% if dev > 0 %}
+              <span class="badge bg-warning text-dark">+{{ dev }}%</span>
+              <small class="text-muted ms-2">Progres fisik di depan pembayaran</small>
+            {% elif dev < 0 %}
+              <span class="badge bg-danger">{{ dev }}%</span>
+              <small class="text-muted ms-2">Pembayaran di depan progres fisik</small>
+            {% else %}
+              <span class="badge bg-success">Seimbang</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-list-ol"></i> Termin</th>
+          <td>{{ k.termin or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-file-earmark-check"></i> Update LKP</th>
+          <td>{{ k.update_lkp.strftime('%d %B %Y') if k.update_lkp else '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-journal-text"></i> Catatan</th>
+          <td>{{ k.catatan or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-clock"></i> Akhir JamPel</th>
+          <td>{{ k.akhir_jampel.strftime('%d %B %Y') if k.akhir_jampel else '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-clock-history"></i> Akhir JamHar</th>
+          <td>{{ k.akhir_jamhar.strftime('%d %B %Y') if k.akhir_jamhar else '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-tools"></i> Masa Pemeliharaan</th>
+          <td>{{ k.masa_pemeliharaan or '-' }}</td>
+        </tr>
+        <tr>
+          <th><i class="bi bi-activity"></i> STATUS Kontrak</th>
+          <td>
+            <span class="badge {{ k.status_masa_kontrak_badge }} fs-6">
+              {{ k.status_masa_kontrak_label }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<style>
+.detail-table th {
+  width: 30%;
+  background: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  padding: 12px 15px;
+  border-radius: 8px 0 0 8px;
+  font-size: 13px;
+}
+.detail-table td {
+  padding: 12px 15px;
+  font-size: 14px;
+  vertical-align: middle;
+}
+.detail-table tr:hover th,
+.detail-table tr:hover td {
+  background: #f0f4ff;
+}
+.detail-table td a {
+  color: #667eea;
+  text-decoration: none;
+  word-break: break-all;
+}
+.detail-table td a:hover {
+  text-decoration: underline;
+}
+</style>
+{% endblock %}

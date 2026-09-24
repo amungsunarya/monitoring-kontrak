@@ -1,0 +1,663 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - {{ config.APP_NAME }}{% endblock %}
+
+{% block content %}
+<h4 class="mb-3"><i class="bi bi-speedometer2"></i> Dashboard Monitoring</h4>
+
+<!-- Kartu Ringkasan -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="stat-card stat-purple">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
+          <small>Total Kontrak</small>
+          <h2>{{ ringkasan.total }}</h2>
+        </div>
+        <i class="bi bi-folder fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-green">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
+          <small>Aktif</small>
+          <h2>{{ ringkasan.aktif }}</h2>
+        </div>
+        <i class="bi bi-check-circle fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-yellow">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
+          <small>Akan Berakhir</small>
+          <h2>{{ ringkasan.akan }}</h2>
+        </div>
+        <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="stat-card stat-red">
+      <div class="d-flex justify-content-between align-items-center w-100">
+        <div>
+          <small>Berakhir</small>
+          <h2>{{ ringkasan.berakhir }}</h2>
+        </div>
+        <i class="bi bi-x-circle fs-1 opacity-50"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Baris 1: Pie, Bar Vendor, Line Tren -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-pie-chart"></i> Status Kontrak</h6>
+      <div class="chart-wrapper">
+        <canvas id="chartStatus"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-bar-chart"></i> Top 10 Vendor</h6>
+      <div class="chart-wrapper">
+        <canvas id="chartVendor"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-graph-up"></i> Tren Bulanan</h6>
+      <div class="chart-wrapper">
+        <canvas id="chartTren"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Baris 2: Gauge Fisik, Gauge Bayar, Heatmap -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-speedometer"></i> Rata-rata Progres Fisik</h6>
+      <div id="chartGaugeFisik" style="min-height:180px;"></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-cash-coin"></i> Rata-rata Progres Bayar</h6>
+      <div id="chartGaugeBayar" style="min-height:180px;"></div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card p-3">
+      <h6><i class="bi bi-grid-3x3"></i> Heatmap Kontrak/Bulan</h6>
+      <div id="chartHeatmap" style="min-height:180px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Gantt -->
+<div class="card p-3 mb-4">
+  <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+    <h6 class="mb-0">
+      <i class="bi bi-calendar-range"></i> Timeline Kontrak (Gantt)
+      <span class="badge bg-light text-dark ms-2" id="ganttCount">0</span>
+    </h6>
+    <div class="d-flex gap-2">
+      <div class="btn-group btn-group-sm" role="group">
+        <input type="radio" class="btn-check" name="ganttViewMode" id="viewDay" value="Day">
+        <label class="btn btn-outline-secondary" for="viewDay">Hari</label>
+
+        <input type="radio" class="btn-check" name="ganttViewMode" id="viewWeek" value="Week" checked>
+        <label class="btn btn-outline-secondary" for="viewWeek">Minggu</label>
+
+        <input type="radio" class="btn-check" name="ganttViewMode" id="viewMonth" value="Month">
+        <label class="btn btn-outline-secondary" for="viewMonth">Bulan</label>
+      </div>
+      <button class="btn btn-sm btn-outline-primary" id="ganttScrollToday" title="Hari ini">
+        <i class="bi bi-calendar-check"></i> Hari Ini
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" id="ganttRefresh" title="Refresh">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+  </div>
+  <div class="gantt-wrapper" id="ganttWrapper" style="overflow-x:auto;min-height:300px;">
+    <svg id="gantt"></svg>
+    <div id="ganttEmpty" class="text-center text-muted py-5 d-none">
+      <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+      Belum ada kontrak dengan tanggal lengkap
+    </div>
+    <div id="ganttLoading" class="text-center py-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <div class="mt-2 text-muted small">Memuat timeline...</div>
+    </div>
+  </div>
+</div>
+
+<!-- S-Curve + Deviasi -->
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <div class="d-flex justify-content-between mb-2">
+        <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> S-Curve Progres</h6>
+        <select id="scurveSelect" class="form-select form-select-sm" style="width:auto;">
+          <option value="">-- Pilih Kontrak --</option>
+        </select>
+      </div>
+      <div id="chartSCurve" style="min-height:220px;"></div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h6><i class="bi bi-bar-chart-line"></i> Deviasi Progres (Fisik vs Bayar)</h6>
+      <div class="chart-wrapper" style="height:250px;">
+        <canvas id="chartDeviasi"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Alerts -->
+<div class="card p-3">
+  <h6><i class="bi bi-bell text-warning"></i> Kontrak Akan Berakhir (≤30 hari)</h6>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead>
+        <tr>
+          <th>No Kontrak</th>
+          <th>Vendor</th>
+          <th>Akhir</th>
+          <th>Sisa</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in alerts %}
+        <tr>
+          <td><b>{{ a.no_kontrak }}</b></td>
+          <td>{{ a.vendor or '-' }}</td>
+          <td>{{ a.akhir_efektif.strftime('%d/%m/%Y') if a.akhir_efektif else '-' }}</td>
+          <td><span class="badge badge-akan">{{ a.sisa_hari }} hari</span></td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="text-center text-muted py-3">
+            Tidak ada kontrak yang akan berakhir
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.0/dist/apexcharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+
+<script>
+// ============================================================
+// GLOBAL CHART.JS SETTINGS
+// ============================================================
+Chart.defaults.maintainAspectRatio = false;
+Chart.defaults.responsive = true;
+Chart.defaults.animation.duration = 500;
+
+
+// ============================================================
+// PIE STATUS
+// ============================================================
+fetch('/api/chart/status')
+  .then(r => r.json())
+  .then(d => {
+    new Chart(document.getElementById('chartStatus'), {
+      type: 'doughnut',
+      data: {
+        labels: d.labels,
+        datasets: [{
+          data: d.data,
+          backgroundColor: d.colors,
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  })
+  .catch(err => console.error('Chart status error:', err));
+
+
+// ============================================================
+// BAR VENDOR
+// ============================================================
+fetch('/api/chart/vendor')
+  .then(r => r.json())
+  .then(d => {
+    new Chart(document.getElementById('chartVendor'), {
+      type: 'bar',
+      data: {
+        labels: d.labels,
+        datasets: [{
+          label: 'Jumlah',
+          data: d.data,
+          backgroundColor: '#667eea',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { font: { size: 10 } } },
+          y: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  })
+  .catch(err => console.error('Chart vendor error:', err));
+
+
+// ============================================================
+// LINE TREN
+// ============================================================
+fetch('/api/chart/tren')
+  .then(r => r.json())
+  .then(d => {
+    new Chart(document.getElementById('chartTren'), {
+      type: 'line',
+      data: {
+        labels: d.labels,
+        datasets: [{
+          label: 'Jumlah Kontrak',
+          data: d.jml,
+          borderColor: '#764ba2',
+          backgroundColor: 'rgba(118,75,162,0.15)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { font: { size: 10 } } },
+          y: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  })
+  .catch(err => console.error('Chart tren error:', err));
+
+
+// ============================================================
+// GAUGE FISIK & BAYAR
+// ============================================================
+fetch('/api/chart/gauge')
+  .then(r => r.json())
+  .then(d => {
+    new ApexCharts(document.getElementById('chartGaugeFisik'), {
+      series: [d.fisik],
+      chart: { type: 'radialBar', height: 180, sparkline: { enabled: true } },
+      plotOptions: {
+        radialBar: {
+          hollow: { size: '60%' },
+          dataLabels: {
+            name: { fontSize: '12px', offsetY: -5 },
+            value: { fontSize: '22px', fontWeight: 'bold', offsetY: 5 }
+          }
+        }
+      },
+      labels: ['Fisik'],
+      colors: ['#38ef7d']
+    }).render();
+
+    new ApexCharts(document.getElementById('chartGaugeBayar'), {
+      series: [d.bayar],
+      chart: { type: 'radialBar', height: 180, sparkline: { enabled: true } },
+      plotOptions: {
+        radialBar: {
+          hollow: { size: '60%' },
+          dataLabels: {
+            name: { fontSize: '12px', offsetY: -5 },
+            value: { fontSize: '22px', fontWeight: 'bold', offsetY: 5 }
+          }
+        }
+      },
+      labels: ['Bayar'],
+      colors: ['#667eea']
+    }).render();
+  })
+  .catch(err => console.error('Chart gauge error:', err));
+
+
+// ============================================================
+// HEATMAP
+// ============================================================
+fetch('/api/chart/heatmap')
+  .then(r => r.json())
+  .then(matrix => {
+    const bulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    const tahunSet = [...new Set(matrix.map(m => m.tahun))].sort();
+    const series = tahunSet.map(t => ({
+      name: String(t),
+      data: bulan.map((b, i) => {
+        const found = matrix.find(m => m.tahun === t && m.bulan === i);
+        return { x: b, y: found ? found.jml : 0 };
+      })
+    }));
+
+    if (!series.length) {
+      document.getElementById('chartHeatmap').innerHTML =
+        '<div class="text-muted text-center pt-5">Belum ada data</div>';
+      return;
+    }
+
+    new ApexCharts(document.getElementById('chartHeatmap'), {
+      series: series,
+      chart: { type: 'heatmap', height: 180, sparkline: { enabled: true } },
+      plotOptions: {
+        heatmap: {
+          shadeIntensity: 0.5,
+          colorScale: {
+            ranges: [
+              { from: 0, to: 0, color: '#f0f0f0', name: 'Kosong' },
+              { from: 1, to: 3, color: '#b3d9ff', name: 'Sedikit' },
+              { from: 4, to: 6, color: '#66b3ff', name: 'Sedang' },
+              { from: 7, to: 10, color: '#3385ff', name: 'Banyak' },
+              { from: 11, to: 999, color: '#0052cc', name: 'Sangat Banyak' }
+            ]
+          }
+        }
+      },
+      dataLabels: { enabled: false },
+      xaxis: { type: 'category', labels: { style: { fontSize: '9px' } } }
+    }).render();
+  })
+  .catch(err => console.error('Chart heatmap error:', err));
+
+
+// ============================================================
+// GANTT CHART
+// ============================================================
+let ganttInstance = null;
+let ganttData = [];
+
+function loadGantt() {
+  const svg = document.getElementById('gantt');
+  const loading = document.getElementById('ganttLoading');
+  const empty = document.getElementById('ganttEmpty');
+  const wrapper = document.getElementById('ganttWrapper');
+  const counter = document.getElementById('ganttCount');
+
+  loading.classList.remove('d-none');
+  empty.classList.add('d-none');
+  svg.innerHTML = '';
+
+  fetch('/api/chart/gantt')
+    .then(r => r.json())
+    .then(data => {
+      loading.classList.add('d-none');
+
+      if (!data || !data.length) {
+        empty.classList.remove('d-none');
+        counter.textContent = '0';
+        return;
+      }
+
+      // === SANITASI ===
+      const seenIds = new Set();
+      const sanitizedData = data
+        .filter(t => t && t.id && t.start && t.end)
+        .map((t) => {
+          let id = String(t.id);
+          let n = 1;
+          while (seenIds.has(id)) {
+            id = `${t.id}_${n++}`;
+          }
+          seenIds.add(id);
+
+          const startStr = String(t.start).slice(0, 10);
+          const endStr = String(t.end).slice(0, 10);
+
+          let progress = parseInt(t.progress, 10);
+          if (isNaN(progress)) progress = 0;
+          progress = Math.max(0, Math.min(100, progress));
+
+          return {
+            id: id,
+            name: String(t.name || t.id || 'Kontrak'),
+            start: startStr,
+            end: endStr,
+            progress: progress,
+            dependencies: '',
+            custom_class: t.custom_class || 'bar-active',
+            kontrak_id: t.kontrak_id || null,
+            no_kontrak_asli: t.no_kontrak_asli || t.name || t.id,
+          };
+        });
+
+      if (!sanitizedData.length) {
+        empty.classList.remove('d-none');
+        counter.textContent = '0';
+        return;
+      }
+
+      counter.textContent = sanitizedData.length;
+      ganttData = sanitizedData;
+
+      // === RENDER ===
+      try {
+        if (ganttInstance) {
+          try { ganttInstance = null; } catch (e) {}
+        }
+
+        ganttInstance = new Gantt("#gantt", sanitizedData, {
+          view_mode: 'Week',
+          language: 'id',
+          bar_height: 22,
+          bar_corner_radius: 4,
+          padding: 16,
+          date_format: 'YYYY-MM-DD',
+          infinite_padding: false,
+          readonly: true,
+          popup_on: 'click',
+
+          custom_popup_html: function (task) {
+            const item = ganttData.find(t => t.id === task.id) || {};
+            const start = task.start.toISOString().slice(0, 10);
+            const end = task.end.toISOString().slice(0, 10);
+            const durasi = Math.round((task.end - task.start) / (1000 * 60 * 60 * 24));
+
+            const cls = item.custom_class || '';
+            let statusClass = 'badge-aktif';
+            let statusText = 'Berjalan';
+            if (cls === 'bar-done') { statusClass = 'badge-selesai'; statusText = 'Selesai'; }
+            else if (cls === 'bar-pending') { statusClass = 'badge-ditunda'; statusText = 'Ditunda'; }
+            else if (cls === 'bar-cancelled') { statusClass = 'badge-batal'; statusText = 'Batal'; }
+
+            const noKontrak = item.no_kontrak_asli || task.id;
+
+            return `
+              <div class="gantt-popup">
+                <strong>${noKontrak}</strong>
+                <div class="row"><span>Mulai:</span><span>${start}</span></div>
+                <div class="row"><span>Selesai:</span><span>${end}</span></div>
+                <div class="row"><span>Durasi:</span><span>${durasi} hari</span></div>
+                <div class="row"><span>Progres:</span><span>${task.progress}%</span></div>
+                <span class="badge-status ${statusClass}">${statusText}</span>
+              </div>
+            `;
+          },
+
+          on_click: function (task) {
+            const item = ganttData.find(t => t.id === task.id);
+            if (item && item.kontrak_id) {
+              window.location.href = '/kontrak/detail/' + item.kontrak_id;
+            }
+          },
+        });
+
+        setTimeout(() => {
+          if (ganttInstance) {
+            ganttInstance.change_view_mode('Week');
+          }
+        }, 100);
+
+      } catch (err) {
+        console.error('Gantt render error:', err);
+        console.error('Data:', sanitizedData);
+        wrapper.innerHTML = `
+          <div class="alert alert-danger m-3">
+            <strong>Gagal render Gantt:</strong> ${err.message}
+          </div>
+        `;
+      }
+    })
+    .catch(err => {
+      loading.classList.add('d-none');
+      console.error('Fetch gantt error:', err);
+      wrapper.innerHTML = `
+        <div class="alert alert-danger m-3">
+          <strong>Gagal memuat data:</strong> ${err.message}
+        </div>
+      `;
+    });
+}
+
+// Init
+loadGantt();
+
+// View Mode Switch
+document.querySelectorAll('input[name="ganttViewMode"]').forEach(function (radio) {
+  radio.addEventListener('change', function () {
+    if (ganttInstance && this.checked) {
+      ganttInstance.change_view_mode(this.value);
+    }
+  });
+});
+
+// Tombol "Hari Ini"
+document.getElementById('ganttScrollToday')?.addEventListener('click', function () {
+  const wrapper = document.getElementById('ganttWrapper');
+  const todayEl = wrapper.querySelector('.today-highlight');
+  if (todayEl) {
+    const rect = todayEl.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const scrollLeft = wrapper.scrollLeft + (rect.left - wrapperRect.left) - 200;
+    wrapper.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+  } else {
+    wrapper.scrollTo({ left: wrapper.scrollWidth / 2, behavior: 'smooth' });
+  }
+});
+
+// Tombol Refresh
+document.getElementById('ganttRefresh')?.addEventListener('click', function () {
+  loadGantt();
+});
+
+
+// ============================================================
+// S-CURVE
+// ============================================================
+fetch('/api/chart/kontrak-list')
+  .then(r => r.json())
+  .then(list => {
+    const sel = document.getElementById('scurveSelect');
+    if (!sel) return;
+    list.forEach(k => {
+      const opt = document.createElement('option');
+      opt.value = k.id;
+      opt.textContent = k.no_kontrak;
+      sel.appendChild(opt);
+    });
+  })
+  .catch(err => console.error('List kontrak error:', err));
+
+let sCurveChart = null;
+document.getElementById('scurveSelect')?.addEventListener('change', function () {
+  const id = this.value;
+  if (!id) return;
+  fetch('/api/chart/scurve/' + id)
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) { alert(d.error); return; }
+      if (sCurveChart) sCurveChart.destroy();
+
+      sCurveChart = new ApexCharts(document.getElementById('chartSCurve'), {
+        series: [
+          { name: 'Rencana', data: d.rencana },
+          { name: 'Realisasi', data: d.realisasi }
+        ],
+        chart: { type: 'area', height: 200, toolbar: { show: false } },
+        colors: ['#667eea', '#38ef7d'],
+        dataLabels: { enabled: false },
+        stroke: { curve: 'smooth', width: 2 },
+        fill: {
+          type: 'gradient',
+          gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 }
+        },
+        xaxis: { categories: d.labels, labels: { style: { fontSize: '10px' } } },
+        yaxis: { title: { text: 'Progres (%)' }, max: 100, min: 0 },
+        title: {
+          text: `${d.no_kontrak} — Fisik: ${d.progres_fisik}% | Bayar: ${d.progres_bayar}%`,
+          align: 'left',
+          style: { fontSize: '11px', color: '#666' }
+        },
+        legend: { position: 'top', fontSize: '11px' }
+      });
+      sCurveChart.render();
+    })
+    .catch(err => console.error('S-Curve error:', err));
+});
+
+
+// ============================================================
+// DEVIASI
+// ============================================================
+fetch('/api/chart/deviasi')
+  .then(r => r.json())
+  .then(d => {
+    new Chart(document.getElementById('chartDeviasi'), {
+      type: 'bar',
+      data: {
+        labels: d.labels,
+        datasets: [
+          { label: 'Fisik %', data: d.fisik, backgroundColor: '#38ef7d', borderRadius: 4 },
+          { label: 'Bayar %', data: d.bayar, backgroundColor: '#667eea', borderRadius: 4 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { font: { size: 9 }, maxRotation: 45 } },
+          y: { ticks: { font: { size: 10 } } }
+        },
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 12, font: { size: 11 } } }
+        }
+      }
+    });
+  })
+  .catch(err => console.error('Deviasi error:', err));
+</script>
+{% endblock %}

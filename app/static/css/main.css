@@ -1,0 +1,314 @@
+:root {
+  --primary: #667eea;
+  --primary-dark: #5568d3;
+  --purple: #764ba2;
+  --success: #38ef7d;
+  --warning: #f2c94c;
+  --danger: #f45c43;
+  --bg: #f5f7fa;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* ==================== LOGIN PAGE ==================== */
+.login-page {
+  background: linear-gradient(135deg, var(--primary), var(--purple));
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  margin: 0;
+}
+.login-box {
+  background: white;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+  width: 100%;
+  max-width: 400px;
+}
+.login-box h3 { text-align: center; color: #2c3e50; margin-bottom: 25px; }
+
+/* ==================== NAVBAR ==================== */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--primary), var(--purple)) !important;
+}
+.navbar-brand, .nav-link { color: white !important; }
+.nav-link.active { font-weight: bold; border-bottom: 2px solid white; }
+.navbar-brand { font-size: 1.15rem; }
+
+/* ==================== CARDS ==================== */
+.card {
+  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+  border-radius: 12px;
+}
+.card h6 { color: #555; font-weight: 600; margin-bottom: 15px; }
+
+/* ==================== STAT CARDS ==================== */
+.stat-card {
+  padding: 20px;
+  color: white;
+  border-radius: 12px;
+  transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }
+.stat-purple { background: linear-gradient(135deg, var(--primary), var(--purple)); }
+.stat-green  { background: linear-gradient(135deg, #11998e, var(--success)); }
+.stat-yellow { background: linear-gradient(135deg, #f2994a, var(--warning)); }
+.stat-red    { background: linear-gradient(135deg, #eb3349, var(--danger)); }
+.stat-card h2 { font-size: 32px; margin: 5px 0; font-weight: 700; }
+.stat-card small { opacity: 0.9; font-size: 12px; }
+
+/* ==================== BADGES ==================== */
+.badge-aktif    { background: #d4edda; color: #155724; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge-akan     { background: #fff3cd; color: #856404; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge-berakhir { background: #f8d7da; color: #721c24; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+
+/* ==================== BUTTONS ==================== */
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+/* ==================== TABLES ==================== */
+.table > :not(caption) > * > * { padding: 10px; }
+.table-dark th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* ==================== PWA INSTALL BUTTON ==================== */
+.btn-install-pwa {
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 50px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+.btn-install-pwa:hover { background: var(--primary-dark); color: white; }
+
+/* ==================== GANTT ==================== */
+.gantt .bar-label { font-size: 11px; }
+.gantt-container { font-family: 'Segoe UI', sans-serif; }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  .stat-card h2 { font-size: 24px; }
+  .container-fluid { padding: 15px !important; }
+  h4 { font-size: 18px; }
+  .btn-install-pwa { bottom: 15px; right: 15px; padding: 10px 16px; }
+}
+
+/* ==================== CHART CONTAINERS ==================== */
+/* Batasi tinggi semua card chart */
+.card h6 {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* Canvas Chart.js — bungkus dengan tinggi tetap */
+.chart-wrapper {
+  position: relative;
+  height: 200px;
+  width: 100%;
+}
+.chart-wrapper canvas {
+  max-height: 100% !important;
+}
+
+/* ApexCharts container */
+.apexcharts-canvas {
+  max-width: 100% !important;
+}
+
+/* Gantt — batasi lebar & tinggi */
+.gantt-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: 400px;
+  border-radius: 8px;
+}
+.gantt-wrapper svg {
+  max-height: 380px;
+}
+
+/* Stat cards — jangan terlalu tinggi */
+.stat-card {
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+}
+.stat-card h2 {
+  margin: 0;
+  line-height: 1;
+}
+
+/* Container grid chart — jaga proporsi */
+.row.g-3 > [class*="col-"] > .card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.row.g-3 > [class*="col-"] > .card > canvas,
+.row.g-3 > [class*="col-"] > .card > div[id^="chart"] {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ==================== GANTT CUSTOM ==================== */
+.gantt-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-height: 500px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: #fafbfc;
+  padding: 10px;
+}
+
+.gantt-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+.gantt-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c7d0;
+  border-radius: 4px;
+}
+
+/* Force SVG responsive */
+.gantt-wrapper .gantt-container {
+  max-width: 100%;
+}
+
+/* Frappe Gantt overrides */
+.gantt .grid-background { fill: #f8f9fa; }
+.gantt .grid-header { fill: #ffffff; }
+.gantt .grid-row { fill: #ffffff; }
+.gantt .grid-row:nth-child(even) { fill: #f8f9fa; }
+.gantt .row-line { stroke: #e9ecef; }
+.gantt .tick { stroke: #e9ecef; }
+.gantt .today-highlight { fill: #667eea; opacity: 0.1; }
+.gantt .upper-text { fill: #6c757d; font-size: 12px; font-weight: 600; }
+.gantt .lower-text { fill: #adb5bd; font-size: 11px; }
+
+/* Bar default */
+.gantt .bar {
+  fill: #667eea;
+  rx: 4;
+  ry: 4;
+}
+.gantt .bar-progress {
+  fill: #4a5fd8;
+  rx: 4;
+  ry: 4;
+}
+.gantt .bar-label {
+  fill: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+.gantt .bar-label.big {
+  fill: #495057;
+  font-size: 11px;
+}
+
+/* Bar per status */
+.gantt .bar-wrapper.bar-done .bar {
+  fill: #38ef7d;
+}
+.gantt .bar-wrapper.bar-done .bar-progress {
+  fill: #26a65b;
+}
+
+.gantt .bar-wrapper.bar-pending .bar {
+  fill: #f2c94c;
+}
+.gantt .bar-wrapper.bar-pending .bar-progress {
+  fill: #d4a518;
+}
+.gantt .bar-wrapper.bar-pending .bar-label {
+  fill: #333;
+}
+
+.gantt .bar-wrapper.bar-cancelled .bar {
+  fill: #f45c43;
+}
+.gantt .bar-wrapper.bar-cancelled .bar-progress {
+  fill: #c9302c;
+}
+
+.gantt .bar-wrapper.bar-active .bar {
+  fill: #667eea;
+}
+.gantt .bar-wrapper.bar-active .bar-progress {
+  fill: #4a5fd8;
+}
+
+/* Hover effect */
+.gantt .bar-wrapper:hover .bar {
+  fill-opacity: 0.85;
+  cursor: pointer;
+}
+
+/* Popup */
+.gantt-container .popup-wrapper {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  padding: 0;
+  max-width: 300px;
+}
+
+.gantt-popup {
+  padding: 10px 14px;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 12px;
+  color: #333;
+}
+.gantt-popup strong {
+  color: #667eea;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.gantt-popup .row {
+  display: flex;
+  justify-content: space-between;
+  margin: 3px 0;
+}
+.gantt-popup .row span:first-child {
+  color: #6c757d;
+}
+.gantt-popup .badge-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.gantt-popup .badge-aktif { background: #d4edda; color: #155724; }
+.gantt-popup .badge-selesai { background: #cfe2ff; color: #084298; }
+.gantt-popup .badge-ditunda { background: #fff3cd; color: #856404; }
+.gantt-popup .badge-batal { background: #f8d7da; color: #721c24; }

@@ -1,0 +1,36 @@
+.env
+.env.local
+*.env
+credentials.json
+*.key.json
+service-account*.json
+
+# SQLite database
+instance/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Backups
+backups/
+
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+venv/
+env/
+
+.vscode/
+.idea/
+*.swp
+
+logs/
+*.log
+
+.DS_Store
+Thumbs.db
+
+dist/
+build/
